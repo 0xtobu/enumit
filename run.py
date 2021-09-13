@@ -13,10 +13,6 @@ import json
 import datetime
 import time
 
-def defaultconverter(o):
-  if isinstance(o, datetime.datetime):
-      return o.__str__()
-
 def cert_search(fqdn):
 	# Searches CRT.sh for certificates and returns it to main.
 	c = Crtsh()
