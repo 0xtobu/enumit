@@ -41,7 +41,7 @@ def cert_search(fqdn):
 def download_file_from_url(domain, url, folder):
 	data = requests.get(url)
 	a = url.split('/')
-	base_dir = domain[0] + '/' + folder
+	base_dir = domain + '/' + folder
 	local_path = base_dir + '/' + a[-1]
 	if not os.path.isdir(base_dir):
 		os.mkdir(base_dir)
@@ -234,6 +234,13 @@ def main(args):
 				files[i].append(a)
 
 		save_dict_as_json(files,'Google_files', args.domain)
+
+		if args.download_files:
+			print('[!] Downloading, this might take a while....')
+			for file_catagory in files:
+				for _file in files[file_catagory]:
+					download_file_from_url(args.domain, _file, 'Google Dorks Files')
+
 
 
 if __name__ == '__main__':
