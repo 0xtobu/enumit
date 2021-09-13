@@ -235,22 +235,6 @@ def main(args):
 
 		save_dict_as_json(files,'Google_files', args.domain)
 
-def start_page():
-	version = 'Version: 0.0.1'
-	developer = 'Tobias'
-	logo = ''' _____                     _____ _____ 
-|  ___|                   |_   _|_   _|
-| |__ _ __  _   _ _ __ ___  | |   | |  
-|  __| '_ \| | | | '_ ` _ \ | |   | |  
-| |__| | | | |_| | | | | | || |_  | |  
-\____/_| |_|\__,_|_| |_| |_\___/  \_/  
-                                       
-                                       '''
-	print(logo)
-	print(version)
-	print(developer)
-	print('Twitter: @iface_tobu')
-
 
 if __name__ == '__main__':
 	start_page()
