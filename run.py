@@ -148,8 +148,6 @@ def start_page():
 	print('Twitter: @iface_tobu')
 
 def main(args):
-	start_page()
-	
 	domain_names = []
 	domain_names.append(args.domain)
 	ipv4_a = []
@@ -177,8 +175,6 @@ def main(args):
 					else:
 						ipv4_a.append(a)
 
-	print(ipv4_a)
-		
 	if args.shodan:
 		if args.api_key:
 			try:
