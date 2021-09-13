@@ -131,17 +131,25 @@ def shodan_port_search(ipv4_address, api_key):
 
 	return output
 
+def start_page():
+	version = 'Version: 0.0.1'
 
-def main(args):
-	print('Testing against: ' + args.domain)
-	print(''' _____                     _____ _____ 
+	logo = ''' _____                     _____ _____ 
 |  ___|                   |_   _|_   _|
 | |__ _ __  _   _ _ __ ___  | |   | |  
 |  __| '_ \| | | | '_ ` _ \ | |   | |  
 | |__| | | | |_| | | | | | || |_  | |  
 \____/_| |_|\__,_|_| |_| |_\___/  \_/  
                                        
-                                       ''')
+                                       '''
+	print(logo)
+	print(version)
+	print('Developer: Tobu')
+	print('Twitter: @iface_tobu')
+
+def main(args):
+	start_page()
+	
 	domain_names = []
 	domain_names.append(args.domain)
 	ipv4_a = []
