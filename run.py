@@ -1,16 +1,15 @@
 #!/bin/python3
+from itertools import count
 from pycrtsh import Crtsh
 import argparse
 import shodan
 from googlesearch import search
-import urllib.request
 import requests
 import os
 from alive_progress import alive_bar
 from progress.spinner import MoonSpinner
 import dns.resolver
 import json
-import datetime
 import time
 
 
@@ -23,7 +22,7 @@ def cert_search(fqdn):
     certificate_list["certs"] = cert_names
     save_dict_as_json(
         json.loads(json.dumps(certificate_list, default=str, ensure_ascii=False)),
-        "crt_certificates",
+        "crt_detailed_certificates",
         fqdn,
     )
     for cert_name in cert_names:
@@ -76,23 +75,23 @@ def save_list_to_disk(lst, file_name, domain):
         textfile.write(element + "\n")
 
     textfile.close()
-    print("[!] Saved!")
     return True
 
 
-def save_dict_as_json(dictonary, file_name, domain):
+def save_dict_as_json(dictonary: dict, file_name, domain):
     path = "./" + domain + "/json"
     if not os.path.isdir(path):
-        print("[!] Domain has not been searched for, creating folder for client")
+        print("[!] Creating JSON folder for the client.")
         os.mkdir(path)
-
+    print("[*] Saving result to:", path + "/" + file_name + ".json")
     with open(path + "/" + file_name + ".json", "w") as outfile:
         json.dump(dictonary, outfile, indent=2)
 
     return True
 
 
-def dns_queries(domain, record_type):
+def dns_queries(domain: list, record_type: list):
+    """Takes lists as arguments, performs dns lookup towards the domain list with the record type list."""
     print("[*] Checking the following record type:", record_type)
     target = {}
     with alive_bar(domain.count(domain)) as bar:
@@ -114,21 +113,23 @@ def dns_queries(domain, record_type):
     return target
 
 
-def shodan_host_search(ipv4_address, api_key):
+def shodan_host_search(ipv4_address: str, api_key: str):
     api = shodan.Shodan(api_key)
     host = api.host(ipv4_address)
-    print(host["ip_str"], host.get("org", "n/a"))
+
     return host["ip_str"], host.get("org", "n/a")
 
 
-def shodan_ssl_search(domain_name, api_key):
+def shodan_ssl_search(domain_name: str, api_key: str):
+    """Takes the domain name string variable, searches shodan for hosts that has that SSL certificate and returns a list of the matches."""
     api = shodan.Shodan(api_key)
     query = 'ssl:"{}"'.format(domain_name)
     result = api.search(query)
     return result["matches"]
 
 
-def shodan_port_search(ipv4_address, api_key):
+def shodan_port_search(ipv4_address: str, api_key: str):
+    """Takes a single IPv4 address arguement and searches shodan for values, returns a list of open ports."""
     api = shodan.Shodan(api_key)
     query = 'net:"{}"'.format(ipv4_address)
 
@@ -145,7 +146,7 @@ def shodan_port_search(ipv4_address, api_key):
 
 
 def start_page():
-    version = "Version: 0.0.1"
+    version = "Version: 0.0.2"
 
     logo = """ _____                     _____ _____ 
 |  ___|                   |_   _|_   _|
@@ -158,7 +159,7 @@ def start_page():
     print(logo)
     print(version)
     print("Developer: Tobu")
-    print("Twitter: @iface_tobu")
+    print("Twitter: @iface_tobu\n")
 
 
 def main(args):
@@ -168,7 +169,7 @@ def main(args):
     hostnames = {}
 
     if not os.path.isdir("./" + args.domain):
-        print("[!] Domain has not been searched for, creating folder for client")
+        print("[!] New domain detected, creating folder for the client.")
         os.mkdir(args.domain)
 
     if args.cert:
@@ -177,7 +178,7 @@ def main(args):
         for a in results:
             domain_names.append(a)
 
-        save_list_to_disk(domain_names, "crt_domains", args.domain)
+        save_list_to_disk(set(domain_names), "crt_domains", args.domain)
 
     if args.dns:
         dns_records = dns_queries(domain_names, args.dns_types)
@@ -189,52 +190,57 @@ def main(args):
                     else:
                         ipv4_a.append(a)
 
-    if args.shodan:
-        if args.api_key:
-            try:
-                if args.providers:
-                    providers = {}
+    if args.shodan and not args.api_key:
+        print("[!] You must supply a API key to use the shodan functions.")
+
+    if args.shodan and args.api_key:
+
+        try:
+            if args.providers:
+
+                providers = {}
+                for i in ipv4_a:
+                    try:
+                        shodan_host_search(i, args.api_key)
+
+                    except:
+                        pass
+
+            if args.ssl:
+                ssl_hosts = shodan_ssl_search(args.domain, args.api_key)
+                shodan_hosts = []
+                for i in ssl_hosts:
+                    if i["ip_str"] in ipv4_a:
+                        pass
+
+                    else:
+                        ipv4_a.append(i["ip_str"])
+                        shodan_hosts.append(i["ip_str"])
+
+                save_dict_as_json(ssl_hosts, "Shodan_SSL_hosts", args.domain)
+                save_list_to_disk(shodan_hosts, "Shodan_SSL_Hosts", args.domain)
+
+            if args.portscan:
+                hostnames["hostname"] = []
+
+                print(
+                    "[!] Checking",
+                    str(ipv4_a.count(ipv4_a)),
+                    "hosts against shodan, this might take a while.",
+                )
+                with alive_bar(ipv4_a.count(ipv4_a)) as bar:
                     for i in ipv4_a:
-                        try:
-                            shodan_host_search(i, args.api_key)
 
-                        except:
-                            pass
+                        hostnames["hostname"].append(
+                            shodan_port_search(i, args.api_key)
+                        )
+                        time.sleep(1.0)
+                        bar()
 
-                if args.ssl:
-                    ssl_hosts = shodan_ssl_search(args.domain, args.api_key)
-                    shodan_hosts = []
-                    for i in ssl_hosts:
-                        if i["ip_str"] in ipv4_a:
-                            pass
+                save_dict_as_json(hostnames, "Shodan_Ports_hosts", args.domain)
 
-                        else:
-                            ipv4_a.append(i["ip_str"])
-                            shodan_hosts.append(i["ip_str"])
-
-                    save_dict_as_json(ssl_hosts, "Shodan_SSL_hosts", args.domain)
-                    save_list_to_disk(shodan_hosts, "Shodan_SSL_Hosts", args.domain)
-
-                if args.portscan:
-                    hostnames["hostname"] = []
-
-                    with alive_bar(ipv4_a.count(ipv4_a)) as bar:
-                        for i in ipv4_a:
-
-                            hostnames["hostname"].append(
-                                shodan_port_search(i, args.api_key)
-                            )
-                            time.sleep(1.0)
-                            bar()
-
-                    print(hostnames)
-                    save_dict_as_json(hostnames, "Shodan_Ports_hosts", args.domain)
-
-            except Exception as e:
-                print("[!] Shodan Exception", e)
-
-        else:
-            print("[!] You must supply a API key to use the shodan functions.")
+        except Exception as e:
+            print("[!] Shodan Exception", e)
 
     if args.google:
         files = {}
@@ -247,10 +253,14 @@ def main(args):
         save_dict_as_json(files, "Google_files", args.domain)
 
         if args.download_files:
-            print("[!] Downloading, this might take a while....")
-            for file_catagory in files:
-                for _file in files[file_catagory]:
-                    download_file_from_url(args.domain, _file, "Google Dorks Files")
+
+            with MoonSpinner("[!] Downloading, this might take a while ") as bar:
+                for file_catagory in files:
+                    bar.next()
+                    for _file in files[file_catagory]:
+                        download_file_from_url(args.domain, _file, "Google Dorks Files")
+                        bar.next()
+    print("[*] Done!")
 
 
 if __name__ == "__main__":
