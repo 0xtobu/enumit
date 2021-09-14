@@ -128,7 +128,7 @@ def shodan_ssl_search(domain_name: str, api_key: str):
     return result["matches"]
 
 
-def shodan_port_search(ipv4_address: str, api_key: str):
+def shodan_port_search(ipv4_address: str, api_key: str, eyewitness: bool):
     """Takes a single IPv4 address arguement and searches shodan for values, returns a list of open ports."""
     api = shodan.Shodan(api_key)
     query = 'net:"{}"'.format(ipv4_address)
@@ -137,16 +137,21 @@ def shodan_port_search(ipv4_address: str, api_key: str):
 
     output = {}
     ports = []
+    # print(ipv4_address)
     for i in result["matches"]:
         ports.append(i["port"])
 
+        if "HTTP" in i["data"] and eyewitness:
+            with open("eyewitness_http.txt", "a+") as file_to_save:
+                this = ipv4_address + ":" + str(i["port"]) + "\n"
+                file_to_save.write(this)
     output[ipv4_address] = ports
 
     return output
 
 
 def start_page():
-    version = "Version: 0.0.2"
+    version = "Version: 0.1.0"
 
     logo = """ _____                     _____ _____ 
 |  ___|                   |_   _|_   _|
@@ -222,6 +227,7 @@ def main(args):
 
             if args.portscan:
                 hostnames["hostname"] = []
+                # host_info["ipv4"] = []
 
                 print(
                     "[!] Checking",
@@ -231,9 +237,9 @@ def main(args):
                 with alive_bar(ipv4_a.count(ipv4_a)) as bar:
                     for i in ipv4_a:
 
-                        hostnames["hostname"].append(
-                            shodan_port_search(i, args.api_key)
-                        )
+                        output = shodan_port_search(i, args.api_key, args.eyewitness)
+
+                        hostnames["hostname"].append(output)
                         time.sleep(1.0)
                         bar()
 
@@ -303,7 +309,12 @@ if __name__ == "__main__":
         action="store_true",
         help="Tries to identify possible service providers for the client.",
     )
-
+    group.add_argument(
+        "--eyewitness",
+        default=False,
+        action="store_true",
+        help="Identifies all hosts that has a HTTP server, and saves the list into a eyewitness compatible list.",
+    )
     # Google Dorking
     dorking = parser.add_argument_group("Google Dorking Settings")
     dorking.add_argument(
