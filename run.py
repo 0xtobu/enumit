@@ -2,7 +2,7 @@
 from pycrtsh import Crtsh
 import argparse
 import shodan
-from googlesearch.googlesearch import GoogleSearch
+from googlesearch import search
 import requests
 import os
 from alive_progress import alive_bar
@@ -61,8 +61,9 @@ def google_dorking(domain_name, filetype_arg):
 
   print("[*] Searching google with the following dork: " + query)
   with MoonSpinner("[*] Googling like a boss, Processing ") as bar:
-    for j in GoogleSearch(query):
-      file_links.append(j)
+    google_search_results = search(query)
+    for result in google_search_results:
+      file_links.append(result)
       bar.next()
 
   return file_links
@@ -102,7 +103,7 @@ def dns_queries(domain: list, record_type: list):
         value = dns.resolver.resolve(i, a)
         target[i][a] = []
         target[i][a].append(str(value))
-        
+
       bar()
 
     save_dict_as_json(target, "DNS_Queries", domain[0])
