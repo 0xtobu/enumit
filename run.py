@@ -120,7 +120,7 @@ def shodan_host_search(ipv4_address: str, api_key: str):
 def shodan_ssl_search(domain_name: str, api_key: str):
   """Takes the domain name string variable, searches shodan for hosts that has that SSL certificate and returns a list of the matches."""
   api = shodan.Shodan(api_key)
-  query = 'ssl:"{}"'.format(domain_name)
+  query = f"ssl:{domain_name}"
   result = api.search(query)
   return result["matches"]
 
@@ -128,7 +128,7 @@ def shodan_ssl_search(domain_name: str, api_key: str):
 def shodan_port_search(ipv4_address: str, api_key: str, eyewitness: bool):
   """Takes a single IPv4 address arguement and searches shodan for values, returns a list of open ports."""
   api = shodan.Shodan(api_key)
-  query = 'net:"{}"'.format(ipv4_address)
+  query = f"net:{ipv4_address}"
 
   result = api.search(query)
 
