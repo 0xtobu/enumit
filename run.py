@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
+"""Enum is searches for open source information"""
 from pycrtsh import Crtsh
 import argparse
 import shodan
 from googlesearch import search
 import requests
 import os
-from alive_progress import alive_bar
 from progress.spinner import MoonSpinner
 import dns.resolver
 import json
@@ -72,7 +72,8 @@ def google_dorking(domain_name, filetype_arg):
 def save_list_to_disk(lst, file_name, domain):
   print("[*] Saving list to disk: " + "./" +
         domain + "/" + file_name + ".txt")
-  textfile = open("./" + domain + "/" + file_name + ".txt", "w", encoding="utf-8")
+  textfile = open(
+    "./" + domain + "/" + file_name + ".txt", "w", encoding="utf-8")
   for element in lst:
     textfile.write(element + "\n")
 
@@ -93,7 +94,8 @@ def save_dict_as_json(dictonary: dict, file_name, domain):
 
 
 def dns_queries(domain: list, record_type: list):
-  """Takes lists as arguments, performs dns lookup towards the domain list with the record type list."""
+  """Takes lists as arguments, performs dns lookup towards the domain 
+  list with the record type list."""
   print("[*] Checking the following record type:", record_type)
   target = {}
   for i in domain:
@@ -117,7 +119,11 @@ def shodan_host_search(ipv4_address: str, api_key: str):
 
 
 def shodan_ssl_search(domain_name: str, api_key: str):
-  """Takes the domain name string variable, searches shodan for hosts that has that SSL certificate and returns a list of the matches."""
+  """
+  Takes the domain name string variable,
+  searches shodan for hosts that has that
+  SSL certificate and returns a list of the matches.
+  """
   api = shodan.Shodan(api_key)
   query = f"ssl:{domain_name}"
   result = api.search(query)
@@ -125,7 +131,11 @@ def shodan_ssl_search(domain_name: str, api_key: str):
 
 
 def shodan_port_search(ipv4_address: str, api_key: str, eyewitness: bool):
-  """Takes a single IPv4 address arguement and searches shodan for values, returns a list of open ports."""
+  """
+  Takes a single IPv4 address arguement
+  and searches shodan for values,
+  returns a list of open ports.
+  """
   api = shodan.Shodan(api_key)
   query = f"net:{ipv4_address}"
 
@@ -138,7 +148,7 @@ def shodan_port_search(ipv4_address: str, api_key: str, eyewitness: bool):
     ports.append(i["port"])
 
     if "HTTP" in i["data"] and eyewitness:
-      with open("eyewitness_http.txt", "a+") as file_to_save:
+      with open("eyewitness_http.txt", "a+", encoding="utf-8") as file_to_save:
         this = ipv4_address + ":" + str(i["port"]) + "\n"
         file_to_save.write(this)
   output[ipv4_address] = ports
@@ -156,27 +166,27 @@ def start_page():
   print("Twitter: @iface_tobu\n")
 
 
-def main(args):
+def main(arguments):
   domain_names = []
-  domain_names.append(args.domain)
+  domain_names.append(arguments.domain)
   ipv4_a = []
   hostnames = {}
 
-  if not os.path.isdir("./" + args.domain):
+  if not os.path.isdir("./" + arguments.domain):
     print("[!] New domain detected, creating folder for the client.")
-    os.mkdir(args.domain)
+    os.mkdir(arguments.domain)
 
-  if args.cert:
+  if arguments.cert:
     print("[!] Checking Certificates")
-    results = cert_search(args.domain)
+    results = cert_search(arguments.domain)
     for a in results:
       domain_names.append(a)
 
-    save_list_to_disk(set(domain_names), "crt_domains", args.domain)
+    save_list_to_disk(set(domain_names), "crt_domains", arguments.domain)
 
-  if args.dns:
-    dns_records = dns_queries(domain_names, args.dns_types)
-    for i in dns_records:
+  if arguments.dns:
+    dns_records = dns_queries(domain_names, arguments.dns_types)
+    for i in dns_records.items():
       for k in dns_records[i]:
         for a in dns_records[i][k]:
           if a in ipv4_a:
@@ -184,57 +194,55 @@ def main(args):
           else:
             ipv4_a.append(a)
 
-  if args.shodan and not args.api_key:
+  if arguments.shodan and not args.api_key:
     print("[!] You must supply a API key to use the shodan functions.")
 
-  if args.shodan and args.api_key:
-    try:
-      if args.providers:
+  if arguments.shodan and arguments.api_key:
+
+    if arguments.providers:
+
+      for i in ipv4_a:
+        shodan_host_search(i, arguments.api_key)
+
+
+    if arguments.ssl:
+      ssl_hosts = shodan_ssl_search(arguments.domain, arguments.api_key)
+      shodan_hosts = []
+      for i in ssl_hosts:
+        if i["ip_str"] in ipv4_a:
+          pass
+
+        else:
+          ipv4_a.append(i["ip_str"])
+          shodan_hosts.append(i["ip_str"])
+
+      save_dict_as_json(ssl_hosts, "Shodan_SSL_hosts", args.domain)
+      save_list_to_disk(
+            shodan_hosts, "Shodan_SSL_Hosts", args.domain)
+
+      if arguments.portscan:
+        hostnames["hostname"] = []
+        # host_info["ipv4"] = []
+
+        print(
+          "[!] Checking",
+          str(ipv4_a.count(ipv4_a)),
+          "hosts against shodan, this might take a while.",
+      )
 
         for i in ipv4_a:
-          shodan_host_search(i, args.api_key)
+
+          output = shodan_port_search(
+              i, args.api_key, args.eyewitness)
+
+          hostnames["hostname"].append(output)
+          time.sleep(1.0)
 
 
-      if args.ssl:
-        ssl_hosts = shodan_ssl_search(args.domain, args.api_key)
-        shodan_hosts = []
-        for i in ssl_hosts:
-          if i["ip_str"] in ipv4_a:
-            pass
+        save_dict_as_json(hostnames, "Shodan_Ports_hosts", args.domain)
 
-          else:
-            ipv4_a.append(i["ip_str"])
-            shodan_hosts.append(i["ip_str"])
 
-        save_dict_as_json(ssl_hosts, "Shodan_SSL_hosts", args.domain)
-        save_list_to_disk(
-              shodan_hosts, "Shodan_SSL_Hosts", args.domain)
-
-        if args.portscan:
-          hostnames["hostname"] = []
-          # host_info["ipv4"] = []
-
-          print(
-            "[!] Checking",
-            str(ipv4_a.count(ipv4_a)),
-            "hosts against shodan, this might take a while.",
-        )
-          with alive_bar(ipv4_a.count(ipv4_a)) as bar:
-            for i in ipv4_a:
-
-              output = shodan_port_search(
-                  i, args.api_key, args.eyewitness)
-
-              hostnames["hostname"].append(output)
-              time.sleep(1.0)
-            bar()
-
-          save_dict_as_json(hostnames, "Shodan_Ports_hosts", args.domain)
-
-    except Exception as e:
-      print("[!] Shodan Exception", e)
-
-    if args.google:
+    if arguments.google:
       files = {}
       for i in args.filetypes:
         files[i] = []
@@ -244,15 +252,11 @@ def main(args):
 
       save_dict_as_json(files, "Google_files", args.domain)
 
-    if args.download_files:
+    if arguments.download_files:
+      for file_catagory in files.items():
+        for file in files[file_catagory]:
+          download_file_from_url(args.domain, file, "Google Dorks Files")
 
-      with MoonSpinner("[!] Downloading, this might take a while ") as bar:
-        for file_catagory in files:
-          bar.next()
-          for file in files[file_catagory]:
-            download_file_from_url(
-                args.domain, file, "Google Dorks Files")
-            bar.next()
     print("[*] Done!")
 
 
@@ -275,7 +279,10 @@ if __name__ == "__main__":
   # Shodan Related Arguments
   group = parser.add_argument_group("Shodan Search Settings")
   group.add_argument(
-      "--shodan", default=False, action="store_true", help="Perform shodan searches"
+      "--shodan",
+        default=False,
+          action="store_true",
+            help="Perform shodan searches"
   )
   group.add_argument("--api-key", help="Your shodan API key")
   group.add_argument(
@@ -300,7 +307,7 @@ if __name__ == "__main__":
       "--eyewitness",
       default=False,
       action="store_true",
-      help="Identifies all hosts that has a HTTP server, and saves the list into a eyewitness compatible list.",
+      help="Identifies hosts with HTTP, saves to a eyewitness compatible list.",
   )
   # Google Dorking
   dorking = parser.add_argument_group("Google Dorking Settings")
@@ -320,7 +327,7 @@ if __name__ == "__main__":
       "--filetypes",
       default=["pdf", "docx", "doc"],
       nargs="+",
-      help="Spesify the types of files that you want to search for, default: doc, docx, pdf.",
+      help="Spesify filetype to search for, default: doc, docx, pdf.",
   )
 
   # DNS Queries
@@ -334,13 +341,13 @@ if __name__ == "__main__":
   dnnns.add_argument(
       "--dns-srv",
       default="1.1.1.1",
-      help="Spesify what DNS server you want to use for DNS Queries. Default is 1.1.1.1",
+      help="Spesify custom DNS serverto query. Default: 1.1.1.1",
   )
   dnnns.add_argument(
       "--dns-types",
       default=["A", "NS"],
       nargs="+",
-      help="Spesify the types of records that you want to search for, default: A, NS. Example:",
+      help="Spesify types of records to search for, default: A, NS",
   )
 
   parser.add_argument(
