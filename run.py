@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/usr/bin/env python3
 from itertools import count
 from pycrtsh import Crtsh
 import argparse
