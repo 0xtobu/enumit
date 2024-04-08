@@ -71,7 +71,7 @@ def google_dorking(domain_name, filetype_arg):
 def save_list_to_disk(lst, file_name, domain):
   print("[*] Saving list to disk: " + "./" +
         domain + "/" + file_name + ".txt")
-  textfile = open("./" + domain + "/" + file_name + ".txt", "w")
+  textfile = open("./" + domain + "/" + file_name + ".txt", "w", encoding="utf-8")
   for element in lst:
     textfile.write(element + "\n")
 
@@ -85,7 +85,7 @@ def save_dict_as_json(dictonary: dict, file_name, domain):
     print("[!] Creating JSON folder for the client.")
     os.mkdir(path)
   print("[*] Saving result to:", path + "/" + file_name + ".json")
-  with open(path + "/" + file_name + ".json", "w") as outfile:
+  with open(path + "/" + file_name + ".json", "w", encoding="utf-8") as outfile:
     json.dump(dictonary, outfile, indent=2)
 
   return True
