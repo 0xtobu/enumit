@@ -153,14 +153,7 @@ def shodan_port_search(ipv4_address: str, api_key: str, eyewitness: bool):
 def start_page():
   version = "Version: 0.1.1"
 
-  logo = """
- _____                     _____ _____
-|  ___|                   |_   _|_   _|
-| |__ _ __  _   _ _ __ ___  | |   | |
-|  __| '_ \| | | | '_ ` _ \ | |   | |
-| |__| | | | |_| | | | | | || |_  | |
-\____/_| |_|\__,_|_| |_| |_\___/  \_/
-"""
+  logo = "EnumIT"
   print(logo)
   print(version)
   print("Developer: Tobu")
