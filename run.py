@@ -44,7 +44,7 @@ def cert_search(fqdn):
 
 
 def download_file_from_url(domain, url, folder):
-  data = requests.get(url)
+  data = requests.get(url, timeout=10)
   a = url.split("/")
   base_dir = domain + "/" + folder
   local_path = base_dir + "/" + a[-1]
