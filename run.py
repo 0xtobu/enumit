@@ -249,9 +249,9 @@ def main(args):
       with MoonSpinner("[!] Downloading, this might take a while ") as bar:
         for file_catagory in files:
           bar.next()
-          for _file in files[file_catagory]:
+          for file in files[file_catagory]:
             download_file_from_url(
-                args.domain, _file, "Google Dorks Files")
+                args.domain, file, "Google Dorks Files")
             bar.next()
     print("[*] Done!")
 
