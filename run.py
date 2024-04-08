@@ -193,11 +193,8 @@ def main(args):
       if args.providers:
         providers = {}
         for i in ipv4_a:
-          try:
-            shodan_host_search(i, args.api_key)
+          shodan_host_search(i, args.api_key)
 
-          except:
-            pass
 
       if args.ssl:
         ssl_hosts = shodan_ssl_search(args.domain, args.api_key)
