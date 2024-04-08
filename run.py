@@ -357,9 +357,5 @@ if __name__ == "__main__":
   args = parser.parse_args()
 
   # Starting
-  try:
-    main(args)
 
-  except Exception as e:
-
-    print("[!] Unknown Exception", e)
+  main(args)
