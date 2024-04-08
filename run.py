@@ -96,15 +96,14 @@ def dns_queries(domain: list, record_type: list):
   """Takes lists as arguments, performs dns lookup towards the domain list with the record type list."""
   print("[*] Checking the following record type:", record_type)
   target = {}
-  with alive_bar(domain.count(domain)) as bar:
-    for i in domain:
-      target[i] = {}
-      for a in record_type:
-        value = dns.resolver.resolve(i, a)
-        target[i][a] = []
-        target[i][a].append(str(value))
+  for i in domain:
+    target[i] = {}
+    for a in record_type:
+      value = dns.resolver.resolve(i, a)
+      target[i][a] = []
+      target[i][a].append(str(value))
 
-      bar()
+
 
     save_dict_as_json(target, "DNS_Queries", domain[0])
     return target
@@ -191,7 +190,7 @@ def main(args):
   if args.shodan and args.api_key:
     try:
       if args.providers:
-        providers = {}
+
         for i in ipv4_a:
           shodan_host_search(i, args.api_key)
 
@@ -228,7 +227,7 @@ def main(args):
 
               hostnames["hostname"].append(output)
               time.sleep(1.0)
-              bar()
+            bar()
 
           save_dict_as_json(hostnames, "Shodan_Ports_hosts", args.domain)
 
