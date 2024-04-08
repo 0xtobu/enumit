@@ -3,7 +3,7 @@ from itertools import count
 from pycrtsh import Crtsh
 import argparse
 import shodan
-from googlesearch import search
+from googlesearch.googlesearch import GoogleSearch as search
 import requests
 import os
 from alive_progress import alive_bar
@@ -151,7 +151,7 @@ def shodan_port_search(ipv4_address: str, api_key: str, eyewitness: bool):
 
 
 def start_page():
-    version = "Version: 0.1.0"
+    version = "Version: 0.1.1"
 
     logo = """ _____                     _____ _____ 
 |  ___|                   |_   _|_   _|
