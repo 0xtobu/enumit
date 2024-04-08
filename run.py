@@ -99,14 +99,10 @@ def dns_queries(domain: list, record_type: list):
     for i in domain:
       target[i] = {}
       for a in record_type:
-        try:
-          value = dns.resolver.resolve(i, a)
-          target[i][a] = []
-          target[i][a].append(str(value))
-
-        except:
-          pass
-
+        value = dns.resolver.resolve(i, a)
+        target[i][a] = []
+        target[i][a].append(str(value))
+        
       bar()
 
     save_dict_as_json(target, "DNS_Queries", domain[0])
