@@ -2,8 +2,8 @@
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-.. image:: <https://img.shields.io/badge/code%20style-black-000000.svg>
-    :target: <https://github.com/psf/black>
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+    :target: https://github.com/psf/black
 
 This tool was created in order to automate some basic OSINT tasks for penetration testing assingments. The main feature that I haven't seen much anywhere is the downloadd google dork function where this function first perform basic google dorking to find the targets public documents. These documents will then be downloaded to the attackers computer and can be used further to identify metadata about the client.
 
