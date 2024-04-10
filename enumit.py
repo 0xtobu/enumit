@@ -35,6 +35,15 @@ flags.mark_flag_as_required("tldn")
 
 
 def download_file_from_uri(file_uri, download_folder):
+    """Download a file from a given URI to a specified download folder.
+    Parameters:
+        file_uri (str): The URI of the file to download.
+        download_folder (str): The local folder path where the file will be saved.
+
+    The function splits the file URI to extract the filename, constructs the full path for the file to be saved,
+    and attempts to download the file using a GET request. If the request is successful and the response status code is 200,
+    the file content is written to the specified location in binary mode. If the request fails, a warning is logged.
+    """
     splitted_uri_by_slash = file_uri.split("/")
     file_save_location = download_folder + "/" + splitted_uri_by_slash[-1]
     response = requests.get(file_uri, timeout=10)
@@ -48,13 +57,18 @@ def download_file_from_uri(file_uri, download_folder):
 
 
 def search_google(filetype_extention):
-    """google search with user supplied file extention
-    Args:
-      filetype_extention: string
-    Return:
-      list
-    """
+    """Perform a Google search for files of a specific filetype on a specified site.
+    Parameters:
+        filetype_extention (str): The filetype extension to search for (e.g., 'pdf', 'docx').
 
+    Returns:
+        list: A list of URIs that match the Google search query.
+
+    The function constructs a Google search query using the site specified by the FLAGS.tldn variable
+    and the provided filetype extension. It logs the search query, performs the search,
+    and appends each resulting URI to a list. If the debug logging level is set,
+    the function logs each URI added to the list and the completion of the search.
+    """
     file_uri = []
     google_query = f"site:{FLAGS.tldn} filetype:{filetype_extention}"
 
@@ -82,14 +96,17 @@ def crtsh_search():
 
 
 def save_dict_to_json(filename: str, dictonary_data: dict):
-    """saves python dictonaries into a json file
-    Args:
-      filename: must be a string, hopefully identifiable
-      dictonary_data: the data you want saved
-    Returns:
-      Does not return any data
-    """
+    """Save a dictionary object to a JSON file.
+    Parameters:
+        filename (str): The name of the file to save the dictionary to.
+        dictonary_data (dict): The dictionary object to save.
 
+    The function constructs the full filename by appending '.json' to the provided filename,
+    and saves it in the directory specified by the FLAGS.tldn variable.
+    The dictionary is saved in a human-readable format with UTF-8 encoding and an indentation of 2 spaces.
+
+    If the debug logging level is set, the function logs the attempt and success of saving the dictionary.
+    """
     full_filename = "./" + FLAGS.tldn + "/" + filename + ".json"
     if logging.level_debug():
         logging.debug("attempting to save %s to %s", filename, full_filename)
@@ -101,16 +118,20 @@ def save_dict_to_json(filename: str, dictonary_data: dict):
 
 
 def query_dns_server(dns_record, dns_record_type, dnserver="1.1.1.1"):
-    """queries a DNS server for information
-    Args:
-      dns_record: domain name as string that should to queried, i.e example.com
-      dns_record_type:  record type, examples are: A,AAAA,NS,TXT
-      dnserver:  DNS server you want to use
-    Returns:
-      object
-      none if no data was found for the spesific record type
-    """
+    """Query a DNS server for a specific record type associated with a DNS record.
+    Parameters:
+        dns_record (str): The DNS record to query.
+        dns_record_type (str): The type of DNS record to query for (e.g., 'A', 'AAAA', 'CNAME', etc.).
+        dnserver (str): The IP address of the DNS server to query. Defaults to '1.1.1.1'.
 
+    Returns:
+        dns.resolver.Answer: An object containing the DNS query results if the query was successful.
+        None: If the query fails or if there is no answer to the DNS query.
+
+    Raises:
+        dns.resolver.NoAnswer: If the DNS query does not have an answer.
+        dns.exception.DNSException: For any DNS related exceptions.
+    """
     if logging.level_debug():
         logging.debug("reached function query_dns_server")
         logging.debug(
@@ -134,6 +155,15 @@ def query_dns_server(dns_record, dns_record_type, dnserver="1.1.1.1"):
 
 
 def validate_dns_record(dns_record):
+    """
+    Validate if the provided DNS record type is valid.
+
+    Parameters:
+    dns_record (str): A string representing the DNS record type to validate.
+
+    Returns:
+    bool: True if the DNS record type is valid, False otherwise.
+    """
     if logging.level_debug():
         logging.debug("validate_dns_record function started")
     valid_records = ["A", "CNAME", "AAAA", "NS", "TXT"]
