@@ -40,9 +40,12 @@ def download_file_from_uri(file_uri, download_folder):
         file_uri (str): The URI of the file to download.
         download_folder (str): The local folder path where the file will be saved.
 
-    The function splits the file URI to extract the filename, constructs the full path for the file to be saved,
-    and attempts to download the file using a GET request. If the request is successful and the response status code is 200,
-    the file content is written to the specified location in binary mode. If the request fails, a warning is logged.
+    The function splits the file URI to extract the filename,
+    constructs the full path for the file to be saved,
+    and attempts to download the file using a GET request. If the request
+      is successful and the response status code is 200,
+    the file content is written to the specified location in binary mode.
+      If the request fails, a warning is logged.
     """
     splitted_uri_by_slash = file_uri.split("/")
     file_save_location = download_folder + "/" + splitted_uri_by_slash[-1]
@@ -59,12 +62,13 @@ def download_file_from_uri(file_uri, download_folder):
 def search_google(filetype_extention):
     """Perform a Google search for files of a specific filetype on a specified site.
     Parameters:
-        filetype_extention (str): The filetype extension to search for (e.g., 'pdf', 'docx').
+        filetype_extention (str): The filetype extension to search for (pdf)
 
     Returns:
         list: A list of URIs that match the Google search query.
 
-    The function constructs a Google search query using the site specified by the FLAGS.tldn variable
+    The function constructs a Google search query
+    using the site specified by the FLAGS.tldn variable
     and the provided filetype extension. It logs the search query, performs the search,
     and appends each resulting URI to a list. If the debug logging level is set,
     the function logs each URI added to the list and the completion of the search.
@@ -101,11 +105,14 @@ def save_dict_to_json(filename: str, dictonary_data: dict):
         filename (str): The name of the file to save the dictionary to.
         dictonary_data (dict): The dictionary object to save.
 
-    The function constructs the full filename by appending '.json' to the provided filename,
+    The function constructs the full filename by
+    appending '.json' to the provided filename,
     and saves it in the directory specified by the FLAGS.tldn variable.
-    The dictionary is saved in a human-readable format with UTF-8 encoding and an indentation of 2 spaces.
+    The dictionary is saved in a human-readable format
+    with UTF-8 encoding and an indentation of 2 spaces.
 
-    If the debug logging level is set, the function logs the attempt and success of saving the dictionary.
+    If the debug logging level is set, the function
+    logs the attempt and success of saving the dictionary.
     """
     full_filename = "./" + FLAGS.tldn + "/" + filename + ".json"
     if logging.level_debug():
@@ -121,12 +128,14 @@ def query_dns_server(dns_record, dns_record_type, dnserver="1.1.1.1"):
     """Query a DNS server for a specific record type associated with a DNS record.
     Parameters:
         dns_record (str): The DNS record to query.
-        dns_record_type (str): The type of DNS record to query for (e.g., 'A', 'AAAA', 'CNAME', etc.).
-        dnserver (str): The IP address of the DNS server to query. Defaults to '1.1.1.1'.
+        dns_record_type (str):
+        The type of DNS record to query for (e.g., 'A')
+        dnserver (str): The IP address of the DNS server to query. Defaults '1.1.1.1'
 
     Returns:
-        dns.resolver.Answer: An object containing the DNS query results if the query was successful.
-        None: If the query fails or if there is no answer to the DNS query.
+        dns.resolver.Answer:
+            An object containing the DNS query resultsif the query was successful.
+            None: If the query fails or if there is no answer to the DNS query.
 
     Raises:
         dns.resolver.NoAnswer: If the DNS query does not have an answer.
@@ -187,7 +196,6 @@ def main(argv):
         logging.set_verbosity(logging.DEBUG)
         logging.debug("debug enabled")
 
-
     if not os.path.isdir("./" + FLAGS.tldn):
         logging.info("new client detected, creating client folder: %s", FLAGS.tldn)
         os.mkdir(FLAGS.tldn)
@@ -235,7 +243,7 @@ def main(argv):
             )
             os.mkdir(download_directory)
 
-        for filetype in google_uri_results:
+        for filetype in google_uri_results.items():  # [consider-using-dict-items]
             for uri in google_uri_results[filetype]:
                 download_file_from_uri(uri, download_directory)
 
