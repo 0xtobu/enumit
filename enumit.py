@@ -32,6 +32,8 @@ flags.DEFINE_boolean("download", False, "downloads the results from google")
 
 flags.DEFINE_boolean("shodan", False, "perform search for domain names from shodan")
 
+flags.DEFINE_boolean("shodanssl", False, "searches shodan for ssl")
+
 flags.DEFINE_string("shodankey", None, "api key for shodan")
 
 flags.DEFINE_boolean("debug", False, "produces debugging output.")
@@ -246,6 +248,21 @@ def main(argv):
             logging.debug("api key that will be used: %s", shodan_api.api_key)
 
         logging.info("shodan ready for use")
+
+    if FLAGS.shodanssl and FLAGS.shodan:
+        logging.info("started shodan SSL module")
+
+        shodan_ssl_query = 'ssl:"{}"'.format(FLAGS.tldn)
+
+        if logging.level_debug():
+            logging.debug("shodan query: %s", shodan_ssl_query)
+
+        shodan_ssl_results = shodan_api.search(shodan_ssl_query)
+        save_dict_to_json('shodan-ssl-results', shodan_ssl_results["matches"])
+
+
+    elif FLAGS.shodanssl and not FLAGS.shodan:
+        logging.info("ssl module requires --shodan")
 
     if FLAGS.google:
         if logging.level_debug():
