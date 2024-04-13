@@ -34,11 +34,29 @@ flags.DEFINE_boolean("shodan", False, "perform search for domain names from shod
 
 flags.DEFINE_boolean("shodanssl", False, "searches shodan for ssl")
 
+flags.DEFINE_boolean("shodanport", False, "searches shodan for ssl")
+
 flags.DEFINE_string("shodankey", None, "api key for shodan")
 
 flags.DEFINE_boolean("debug", False, "produces debugging output.")
 
 flags.mark_flag_as_required("tldn")
+
+
+def check_if_json_exist(json_filename):
+
+    if os.path.isfile("./" + FLAGS.tldn + "/" + json_filename + ".json"):
+        return True
+    else:
+        return False
+
+
+def get_dictonar_from_saved_json(json_filename):
+    json_object_to_load = open(
+        "./" + FLAGS.tldn + "/" + json_filename + ".json", encoding="utf-8"
+    )
+    json_object = json.load(json_object_to_load)
+    return json_object
 
 
 def download_file_from_uri(file_uri, download_folder):
@@ -252,17 +270,61 @@ def main(argv):
     if FLAGS.shodanssl and FLAGS.shodan:
         logging.info("started shodan SSL module")
 
-        shodan_ssl_query = 'ssl:"{}"'.format(FLAGS.tldn)
+        shodan_ssl_query = str("ssl:%s", FLAGS.tldn)
 
         if logging.level_debug():
             logging.debug("shodan query: %s", shodan_ssl_query)
 
         shodan_ssl_results = shodan_api.search(shodan_ssl_query)
-        save_dict_to_json('shodan-ssl-results', shodan_ssl_results["matches"])
-
+        save_dict_to_json("shodan-ssl-results", shodan_ssl_results["matches"])
 
     elif FLAGS.shodanssl and not FLAGS.shodan:
         logging.info("ssl module requires --shodan")
+
+    if FLAGS.shodanport:
+        logging.info("started shodan SSL module")
+
+        check_dns_cache = check_if_json_exist("dns-data")
+
+        shodan_ipv4_addresses_list = []
+
+        if check_dns_cache:
+            logging.info("found cached data, using that")
+            cached_dns_records = get_dictonar_from_saved_json("dns-data")
+            shodan_ipv4_addresses_list = [
+                record
+                for cached_record in cached_dns_records["dns"]
+                if cached_record["records"]["A"]
+                for item in cached_record["records"]["A"]
+                for record in item
+            ]
+
+        elif check_dns_cache is False:
+            logging.info("cache not found, will query A record for %s", FLAGS.tldn)
+
+            shodan_dns_server_response = query_dns_server(FLAGS.tldn, "A")
+            if shodan_dns_server_response is not None:
+                if logging.level_debug():
+                    logging.debug(
+                        "%s at %s returned non-none value",
+                        "A",
+                        FLAGS.tldn,
+                    )
+                    logging.debug("adding %s record to list", FLAGS.tldn)
+
+                for response in shodan_dns_server_response:
+                    shodan_ipv4_addresses_list.append(str(response))
+
+        shodan_results = {}
+
+        for shodan_ipv4_address_to_search in shodan_ipv4_addresses_list:
+            query = str("net:%s", shodan_ipv4_address_to_search)
+            logging.info("searching shodan for: %s", query)
+
+            result = shodan_api.search(query)
+            shodan_results[shodan_ipv4_address_to_search] = result
+
+        save_dict_to_json("shodan-results-ipv4-from-domain", shodan_results)
 
     if FLAGS.google:
         if logging.level_debug():
