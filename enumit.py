@@ -6,6 +6,7 @@ from absl import flags
 import dns.resolver
 import json
 import os
+import shodan
 from pycrtsh import Crtsh as crtsh
 from googlesearch import search
 import requests
@@ -28,6 +29,10 @@ flags.DEFINE_list(
     "performs google dorking against tldn with provided file extentions",
 )
 flags.DEFINE_boolean("download", False, "downloads the results from google")
+
+flags.DEFINE_boolean("shodan", False, "perform search for domain names from shodan")
+
+flags.DEFINE_string("shodankey", None, "api key for shodan")
 
 flags.DEFINE_boolean("debug", False, "produces debugging output.")
 
@@ -217,6 +222,30 @@ def main(argv):
             fqdn_list.append(domain)
 
         save_dict_to_json("crtsh-domains", crtsh_domain_object)
+
+    if FLAGS.shodan:
+        logging.info("started shodan module")
+
+        if logging.level_debug():
+            logging.debug("checking if API key is provided")
+
+        if os.environ.get("SHODAN_API_KEY"):
+            logging.info("api key provided via enviroment variable")
+            shodan_api_key = os.environ.get("SHODAN_API_KEY")
+
+        elif FLAGS.shodankey:
+            logging.info("api key provided via argument")
+            shodan_api_key = FLAGS.shodankey
+
+        else:
+            logging.warning("no api key provided")
+            return
+
+        shodan_api = shodan.Shodan(shodan_api_key)
+        if logging.level_debug():
+            logging.debug("api key that will be used: %s", shodan_api.api_key)
+
+        logging.info("shodan ready for use")
 
     if FLAGS.google:
         if logging.level_debug():
