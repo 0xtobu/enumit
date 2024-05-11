@@ -351,8 +351,13 @@ def main(argv):
             )
             os.mkdir(download_directory)
 
-        for filetype in google_uri_results.items():  # [consider-using-dict-items]
-            for uri in google_uri_results[filetype]:
+        for (
+            filetype,
+            uri_result,
+        ) in google_uri_results.items():  # [consider-using-dict-items]
+            logging.info("attempting to download all %s files found", filetype)
+
+            for uri in uri_result:
                 download_file_from_uri(uri, download_directory)
 
     if FLAGS.dnsrecord:
