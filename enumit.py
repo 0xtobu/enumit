@@ -119,6 +119,8 @@ def search_google(filetype_extention):
 
 def crtsh_search():
     # TODO(contact.me@tobu.tech): add doc string
+
+    logging.info("searching for subdomains on crt.sh: %s", FLAGS.tldn)
     crt = crtsh()
     certs = crt.subdomains(FLAGS.tldn)
     return certs
@@ -270,7 +272,7 @@ def main(argv):
     if FLAGS.shodanssl and FLAGS.shodan:
         logging.info("started shodan SSL module")
 
-        shodan_ssl_query = str("ssl:%s", FLAGS.tldn)
+        shodan_ssl_query = "ssl:" + FLAGS.tldn
 
         if logging.level_debug():
             logging.debug("shodan query: %s", shodan_ssl_query)
@@ -428,6 +430,8 @@ def main(argv):
                     fqdn["records"][record].append(dns_results)
 
             save_dict_to_json("dns-data", domain_names_list)
+
+    logging.info("completed, results can be found under: %s", FLAGS.tldn)
 
 
 if __name__ == "__main__":
