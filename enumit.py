@@ -105,7 +105,7 @@ def search_google(filetype_extention):
         logging.debug("started google search function")
     logging.info("searching google for: %s", google_query)
 
-    google_results = search(query=google_query)
+    google_results = search(google_query, num_results=20)
 
     for uri in google_results:
         if logging.level_debug():
